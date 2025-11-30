@@ -3,9 +3,9 @@ name: Build ruleset
 on:
   push:
     branches: [ master ]
-    paths:
-      - '*.json'   # 只有根目录 JSON 文件变化时才触发
-  workflow_dispatch:  # 支持手动触发
+    paths-ignore:
+      - 'dist/**'   # 避免 dist 文件夹变化再次触发 workflow
+  workflow_dispatch:
 
 jobs:
   compile-json:
@@ -14,6 +14,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+      with:
+        persist-credentials: true  # 允许 workflow push
 
     - name: Download sing-box
       run: |
@@ -25,7 +27,7 @@ jobs:
       run: |
         mkdir -p dist
         echo "Cleaning old .srs files in dist/"
-        rm -f dist/*.srs || true
+        rm -f dist/*.srs || true  # 删除旧的 .srs 文件，保证干净
 
     - name: Compile all JSON files
       run: |
@@ -37,7 +39,12 @@ jobs:
             sing-box rule-set compile --output "$output" "$file"
           fi
         done
-    - name: List compiled files
+
+    - name: Commit dist folder
       run: |
-        echo "Generated .srs files in dist/:"
-        ls -1 dist/
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+        git add dist/
+        # 只在 dist 有变化时提交
+        git diff --quiet && echo "No changes to commit" || git commit -m "Update dist folder"
+        git push
