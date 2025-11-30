@@ -23,32 +23,31 @@ jobs:
         sudo apt-get install -y curl
         bash <(curl -fsSL https://sing-box.app/deb-install.sh)
 
-    - name: Prepare output directory
+    - name: Clean old .srs files
       run: |
-        mkdir -p dist
-        echo "Cleaning old .srs files in dist/"
-        rm -f dist/*.srs || true
+        echo "Cleaning old .srs files in root directory..."
+        rm -f *.srs || true
 
     - name: Compile all JSON files
       run: |
         echo "Compiling JSON files..."
         for file in *.json; do
           if [ -f "$file" ]; then
-            output="dist/${file%.json}.srs"
+            output="${file%.json}.srs"
             echo "Compiling $file -> $output"
             sing-box rule-set compile --output "$output" "$file"
           fi
         done
 
-    - name: Commit dist folder
+    - name: Commit generated .srs files
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
-        git add dist/
-        git diff --quiet && echo "No changes to commit" || git commit -m "Update dist folder"
+        git add *.srs
+        git diff --quiet && echo "No changes to commit" || git commit -m "Update .srs files"
         git push
 
     - name: List compiled files
       run: |
-        echo "Generated .srs files in dist/:"
-        ls -1 dist/
+        echo "Generated .srs files in root directory:"
+        ls -1 *.srs
