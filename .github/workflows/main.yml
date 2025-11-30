@@ -4,9 +4,7 @@ on:
   push:
     branches: [ master ]
     paths:
-      - '*.json'   # 只在根目录 JSON 文件变化时触发
-    paths-ignore:
-      - 'dist/**'  # 避免 dist 变化再次触发 workflow
+      - '*.json'   # 根目录 JSON 文件变化时触发
   workflow_dispatch:
 
 jobs:
@@ -47,7 +45,6 @@ jobs:
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
         git add dist/
-        # 只在 dist 有变化时提交
         git diff --quiet && echo "No changes to commit" || git commit -m "Update dist folder"
         git push
 
