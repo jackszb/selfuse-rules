@@ -3,8 +3,10 @@ name: Build ruleset
 on:
   push:
     branches: [ master ]
+    paths:
+      - '*.json'   # 只在根目录 JSON 文件变化时触发
     paths-ignore:
-      - 'dist/**'   # 避免 dist 文件夹变化再次触发 workflow
+      - 'dist/**'  # 避免 dist 变化再次触发 workflow
   workflow_dispatch:
 
 jobs:
@@ -27,7 +29,7 @@ jobs:
       run: |
         mkdir -p dist
         echo "Cleaning old .srs files in dist/"
-        rm -f dist/*.srs || true  # 删除旧的 .srs 文件，保证干净
+        rm -f dist/*.srs || true
 
     - name: Compile all JSON files
       run: |
@@ -48,3 +50,8 @@ jobs:
         # 只在 dist 有变化时提交
         git diff --quiet && echo "No changes to commit" || git commit -m "Update dist folder"
         git push
+
+    - name: List compiled files
+      run: |
+        echo "Generated .srs files in dist/:"
+        ls -1 dist/
