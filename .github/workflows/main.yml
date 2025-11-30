@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
     paths:
-      - '*.json'   # 根目录 JSON 文件变化时触发
+      - '*.json'
   workflow_dispatch:
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
       with:
         persist-credentials: true  # 允许 workflow push
 
-    - name: Download sing-box
+    - name: Install sing-box
       run: |
         sudo apt-get update
         sudo apt-get install -y curl
@@ -25,7 +25,7 @@ jobs:
 
     - name: Clean old .srs files
       run: |
-        echo "Cleaning old .srs files in root directory..."
+        echo "Cleaning old .srs files in root..."
         rm -f *.srs || true
 
     - name: Compile all JSON files
@@ -39,15 +39,15 @@ jobs:
           fi
         done
 
+    - name: List generated .srs files
+      run: |
+        echo "Generated .srs files in root:"
+        ls -l *.srs || echo "No .srs files generated"
+
     - name: Commit generated .srs files
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
         git add *.srs
-        git diff --quiet && echo "No changes to commit" || git commit -m "Update .srs files"
+        git diff --cached --quiet && echo "No changes to commit" || git commit -m "Update .srs files"
         git push
-
-    - name: List compiled files
-      run: |
-        echo "Generated .srs files in root directory:"
-        ls -1 *.srs
