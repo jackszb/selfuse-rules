@@ -1,0 +1,43 @@
+name: Build ruleset
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - '*.json'   # 只有根目录 JSON 文件变化时才触发
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  compile-json:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Download sing-box
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl
+        bash <(curl -fsSL https://sing-box.app/deb-install.sh)
+
+    - name: Prepare output directory
+      run: |
+        mkdir -p dist
+        echo "Cleaning old .srs files in dist/"
+        rm -f dist/*.srs || true
+
+    - name: Compile all JSON files
+      run: |
+        echo "Compiling JSON files..."
+        for file in *.json; do
+          if [ -f "$file" ]; then
+            output="dist/${file%.json}.srs"
+            echo "Compiling $file -> $output"
+            sing-box rule-set compile --output "$output" "$file"
+          fi
+        done
+    - name: List compiled files
+      run: |
+        echo "Generated .srs files in dist/:"
+        ls -1 dist/
